@@ -1,0 +1,47 @@
+version: '3.5'
+name: jonsdocs
+
+# Services
+services:
+
+  # PHP FPM Service
+  php:
+    container_name: php
+    build:
+      dockerfile: php-dockerfile
+      context: .
+    volumes:
+      - './www:/var/www/'
+    depends_on:
+      - mariadb
+
+  # Nginx Service
+  nginx:
+    container_name: web
+    image: nginx:latest
+    ports:
+      - 80:80
+      - 443:443
+      - 9000:9000
+    links:
+      - 'php'
+    volumes:
+      - './www:/var/www/'
+      - './nginx-conf:/etc/nginx/conf.d'
+    depends_on:
+      - php
+
+  # MariaDB Service
+  mariadb:
+    container_name: db
+    image: mariadb:10.9
+    command: --init-file /mysql/init.sql
+    volumes:
+        - ./mysql/init.sql:/mysql/init.sql
+    ports:
+      - 3306:3306
+    environment:
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_DATABASE: wordpress
+      MYSQL_ROOT_PASSWORD: wordpress_pass
